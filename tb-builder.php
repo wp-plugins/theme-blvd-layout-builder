@@ -3,7 +3,7 @@
 Plugin Name: Theme Blvd Layout Builder
 Plugin URI: 
 Description: This plugins gives you a slick interface that ties int the Theme Blvd framework to create custom layouts for your WordPress pages.
-Version: 1.0.1
+Version: 1.1.0
 Author: Jason Bobich
 Author URI: http://jasonbobich.com
 License: GPL2
@@ -26,7 +26,7 @@ License: GPL2
 
 */
 
-define( 'TB_BUILDER_PLUGIN_VERSION', '1.0.1' );
+define( 'TB_BUILDER_PLUGIN_VERSION', '1.1.0' );
 define( 'TB_BUILDER_PLUGIN_DIR', dirname( __FILE__ ) ); 
 define( 'TB_BUILDER_PLUGIN_URI', plugins_url( '' , __FILE__ ) );
 
@@ -46,6 +46,16 @@ function themeblvd_builder_init() {
 		return;
 	}
 	
+	// If using framework v2.2.0, tell them they should now update to 2.2.1
+	if( version_compare( TB_FRAMEWORK_VERSION, '2.2.0', '=' ) ) {
+		add_action( 'admin_notices', 'themeblvd_builder_warning_2' );
+	}
+	
+	// If user has a version of TB framework that doesn't have the nag disable yet, hook in our's
+	if( ! function_exists( 'themeblvd_disable_nag' ) ){
+		add_action( 'admin_init', 'themeblvd_builder_disable_nag' );
+	}
+	
 	// Frontend actions -- These work in conjuction with framework theme files, 
 	// header.php, template_builder.php, and footer.php
 	add_action( 'themeblvd_builder_content', 'themeblvd_builder_content' );
@@ -54,12 +64,14 @@ function themeblvd_builder_init() {
 	
 	// Get custom layouts
 	$custom_layouts = array();
-	$custom_layout_posts = get_posts('post_type=tb_layout&numberposts=-1');
-	if( ! empty( $custom_layout_posts ) ) {
-		foreach( $custom_layout_posts as $layout )
-			$custom_layouts[$layout->post_name] = $layout->post_title;
-	} else {
-		$custom_layouts['null'] = __( 'You haven\'t created any custom layouts yet.', 'themeblvd' );
+	if( is_admin() ) {
+		$custom_layout_posts = get_posts('post_type=tb_layout&numberposts=-1');
+		if( ! empty( $custom_layout_posts ) ) {
+			foreach( $custom_layout_posts as $layout )
+				$custom_layouts[$layout->post_name] = $layout->post_title;
+		} else {
+			$custom_layouts['null'] = __( 'You haven\'t created any custom layouts yet.', 'themeblvd' );
+		}
 	}
 	
 	// Add option to theme options page allowing user to 
@@ -115,9 +127,21 @@ add_action( 'after_setup_theme', 'themeblvd_builder_init' );
  */
 
 function themeblvd_builder_textdomain() {
-	load_plugin_textdomain( 'themeblvd_builder', false, TB_SIDEBARS_PLUGIN_DIR . '/lang' );
+	load_plugin_textdomain( 'themeblvd_builder', false, TB_BUILDER_PLUGIN_DIR . '/lang' );
 }
 add_action( 'plugins_loaded', 'themeblvd_builder_textdomain' );
+
+/**
+ * Disable a nag message.
+ *
+ * @since 1.1.0
+ */
+
+function themeblvd_builder_disable_nag() {
+	global $current_user;
+    if ( isset( $_GET['tb_nag_ignore'] ) )
+         add_user_meta( $current_user->ID, $_GET['tb_nag_ignore'], 'true', true );
+}
 
 /**
  * Display warning telling the user they must have a 
@@ -134,6 +158,23 @@ function themeblvd_builder_warning() {
 }
 
 /**
+ * Display warning telling the user they should be using 
+ * theme with Theme Blvd framework v2.2.1+.
+ *
+ * @since 1.1.0
+ */
+
+function themeblvd_builder_warning_2() {
+	global $current_user;
+    if( ! get_user_meta( $current_user->ID, 'tb_builder_warning_2' ) ) {
+        echo '<div class="updated">';
+        echo '<p>'.__( 'You are currently running a theme with Theme Blvd framework v2.2.0. To get the best results from this version of the Theme Blvd Layout Builder, you should update your current theme to its latest version, which will contain framework v2.2.1+.', 'themeblvd_builder' ).'</p>';
+        echo '<p><a href="?tb_nag_ignore=tb_builder_warning_2">'.__('Dismiss this notice', 'themeblvd_builder').'</a></p>';
+        echo '</div>';
+    }
+}
+
+/**
  * Redirect homepage to index.php to the custom 
  * layout template if option is set. This is 
  * filtered to template_include.
@@ -142,11 +183,11 @@ function themeblvd_builder_warning() {
  */
 
 function themeblvd_builder_homepage( $template ) {
-	
-	// If this is the homepage and the user has 
-	// selected to show a custom layout, redirect 
-	// index.php to template_builder.php
-	if( is_home() && 'custom_layout' == themeblvd_get_option( 'homepage_content', null, 'posts' ) )
+
+	// If this is the homepage (but NOT the "posts page") 
+	// and the user has selected to show a custom layout, 
+	// redirect index.php to template_builder.php
+	if( is_home() && ! get_option( 'page_for_posts' ) && 'custom_layout' == themeblvd_get_option( 'homepage_content', null, 'posts' ) )
 		$template = locate_template( 'template_builder.php' );
 			
 	return $template;
@@ -176,16 +217,15 @@ function themeblvd_modify_customizer_homepage( $sections ) {
  *
  * @since 1.0.0
  *
- * @param string $layout Post slug for layout
+ * @param string $layout_id Post ID for custom layout
  * @param string $location Location of elements, featured or primary
  */
  
-function themeblvd_builder_elements( $layout, $location ) {
+function themeblvd_builder_elements( $layout_id, $location ) {
 	
 	// Setup
 	$counter = 0;
 	$primary_query = false;
-	$layout_id = themeblvd_post_id_by_name( $layout, 'tb_layout' );
 	if( ! $layout_id ) {
 		// This should rarely happen. A common scenario might 
 		// be the user setup a page with a layout, but then 
@@ -231,7 +271,7 @@ function themeblvd_builder_elements( $layout, $location ) {
 			$classes .= $element['type'];
 		if( isset( $element['options']['visibility'] ) )
 			$classes .= themeblvd_responsive_visibility_class( $element['options']['visibility'], true );
-		$classes .= themeblvd_get_classes( 'element_'.$element['type'], true, false, $element['type'], $element['options'] );
+		$classes .= themeblvd_get_classes( 'element_'.$element['type'], true, false, $element['type'], $element['options'], $location );
 		
 		// Start ouput
 		do_action( 'themeblvd_element_'.$element['type'].'_before', $id, $element['options'], $location ); // Before element: themeblvd_element_{type}_before
@@ -333,6 +373,14 @@ function themeblvd_builder_elements( $layout, $location ) {
 			case 'post_list_slider' :
 				themeblvd_post_slider( $id, $element['options'], 'list', $location );
 				break;
+			
+			/*------------------------------------------------------*/
+			/* Post Slider (mimics standard slider)
+			/*------------------------------------------------------*/
+
+			case 'post_slider' :
+				themeblvd_slider_auto( $id, $element['options'] );
+				break;
 				
 			/*------------------------------------------------------*/
 			/* Slider
@@ -391,7 +439,7 @@ function themeblvd_builder_elements( $layout, $location ) {
 
 function themeblvd_builder_content() {
 	if( themeblvd_config( 'builder' ) )
-		themeblvd_builder_elements( themeblvd_config( 'builder' ), 'primary' );	
+		themeblvd_builder_elements( themeblvd_config( 'builder_post_id' ), 'primary' );	
 }
 
 /**
@@ -402,7 +450,7 @@ function themeblvd_builder_content() {
 
 function themeblvd_builder_featured() {
 	if( themeblvd_config( 'builder' ) )
-		themeblvd_builder_elements( themeblvd_config( 'builder' ), 'featured' );	
+		themeblvd_builder_elements( themeblvd_config( 'builder_post_id' ), 'featured' );	
 }
 
 /**
@@ -413,5 +461,5 @@ function themeblvd_builder_featured() {
  
 function themeblvd_builder_featured_below() {
 	if( themeblvd_config( 'builder' ) )
-		themeblvd_builder_elements( themeblvd_config( 'builder' ), 'featured_below' );	
+		themeblvd_builder_elements( themeblvd_config( 'builder_post_id' ), 'featured_below' );	
 }
