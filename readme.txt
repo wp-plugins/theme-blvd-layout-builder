@@ -39,12 +39,12 @@ Method 2: Under *Settings > Reading > Frontpage Displays*, select "your latest p
 
 = 1.1.0 =
 
-* **WARNING: Jump Start users, make sure you've updated to Jump Start v1.0.1+ before applying this update to the Layout Builder.**
+* **WARNING: Jump Start users, make sure you've updated to Jump Start v1.0.1+ before applying this update for the Layout Builder.**
+* Update requires Theme Blvd framework v2.2.1+.
 * Added Meta Box to apply and edit custom layouts directly from Edit page screen.
 * Added support for "Post Slider" when used with [Theme Blvd Sliders](http://wordpress.org/extend/plugins/theme-blvd-sliders) plugin.
 * Minor internal improvements to cut down on database queries.
 * Added check so if user designates a "posts page" under Settings > Reading, the homepage custom layout option will not get applied (many people do this by accident).
-* Update requires Theme Blvd framework v2.2.1+.
 
 = 1.0.1 =
 
