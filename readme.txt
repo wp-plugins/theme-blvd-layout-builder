@@ -39,6 +39,7 @@ Method 2: Under *Settings > Reading > Frontpage Displays*, select "your latest p
 
 = 1.1.0 =
 
+* **WARNING: Jump Start users, make sure you've updated to Jump Start v1.0.1+ before applying this update to the Layout Builder.**
 * Added Meta Box to apply and edit custom layouts directly from Edit page screen.
 * Added support for "Post Slider" when used with [Theme Blvd Sliders](http://wordpress.org/extend/plugins/theme-blvd-sliders) plugin.
 * Minor internal improvements to cut down on database queries.
