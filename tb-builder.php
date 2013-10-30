@@ -2,7 +2,7 @@
 /*
 Plugin Name: Theme Blvd Layout Builder
 Description: This plugins gives you a slick interface that ties int the Theme Blvd framework to create custom layouts for your WordPress pages.
-Version: 1.2.0
+Version: 1.2.1
 Author: Theme Blvd
 Author URI: http://themeblvd.com
 License: GPL2
@@ -25,7 +25,7 @@ License: GPL2
 
 */
 
-define( 'TB_BUILDER_PLUGIN_VERSION', '1.2.0' );
+define( 'TB_BUILDER_PLUGIN_VERSION', '1.2.1' );
 define( 'TB_BUILDER_PLUGIN_DIR', dirname( __FILE__ ) );
 define( 'TB_BUILDER_PLUGIN_URI', plugins_url( '' , __FILE__ ) );
 
@@ -75,8 +75,9 @@ function themeblvd_builder_init() {
 	if ( is_admin() ) {
 		$custom_layout_posts = get_posts('post_type=tb_layout&orderby=title&order=ASC&numberposts=-1');
 		if ( ! empty( $custom_layout_posts ) ) {
-			foreach( $custom_layout_posts as $layout )
+			foreach( $custom_layout_posts as $layout ) {
 				$custom_layouts[$layout->post_name] = $layout->post_title;
+			}
 		} else {
 			$custom_layouts['null'] = __( 'You haven\'t created any custom layouts yet.', 'themeblvd' );
 		}
@@ -120,6 +121,7 @@ function themeblvd_builder_init() {
 		// hidden and for the appropriate user capability
 		if ( themeblvd_supports( 'admin', 'builder' ) && current_user_can( themeblvd_admin_module_cap( 'builder' ) ) ) {
 			include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/builder-samples.php' );
+			include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/class-tb-layout-builder-ajax.php' );
 			include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/class-tb-layout-builder.php' );
 			$_themeblvd_layout_builder = new Theme_Blvd_Layout_Builder();
 		}
@@ -134,6 +136,9 @@ add_action( 'after_setup_theme', 'themeblvd_builder_init' );
  * @since 1.2.0
  */
 function themeblvd_builder_api_init() {
+
+	// Include screen options class (used in API)
+	include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/class-tb-layout-builder-screen.php' );
 
 	// Include Theme_Blvd_Builder_API class.
 	include_once( TB_BUILDER_PLUGIN_DIR . '/includes/api/class-tb-builder-api.php' );

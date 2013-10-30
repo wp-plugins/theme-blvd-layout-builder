@@ -110,8 +110,9 @@ class Theme_Blvd_Builder_API {
      */
 	public static function get_instance() {
 
-		if( self::$instance == null )
+		if ( self::$instance == null ) {
             self::$instance = new self;
+        }
 
         return self::$instance;
 	}
@@ -128,7 +129,7 @@ class Theme_Blvd_Builder_API {
 		// consuming as much memory on the frontend.
 		$this->set_registered_elements();
 
-		if( is_admin() ) {
+		if ( is_admin() ) {
 
 			// Setup framework default elements and sample
 			// layouts to build onto for Builder interface.
@@ -190,12 +191,14 @@ class Theme_Blvd_Builder_API {
 
 		// Setup array for floating sidebars
 		$sidebars = array();
-		if( defined( 'TB_SIDEBARS_PLUGIN_VERSION' ) ) {
+		if ( defined( 'TB_SIDEBARS_PLUGIN_VERSION' ) ) {
 			$sidebars = themeblvd_get_select( 'sidebars' );
-			if( ! $sidebars )
-				$sidebars['null'] = __( 'You haven\'t created any floating widget areas yet.', 'themeblvd' );
-			if( ! defined( 'TB_SIDEBARS_PLUGIN_VERSION' ) )
-				$sidebars['null'] = __( 'You need to have the Theme Blvd Widget Areas plugin installed for this feature.', 'themeblvd' );
+			if ( ! $sidebars ) {
+				$sidebars['null'] = __( 'You haven\'t created any floating widget areas yet.', 'themeblvd_builder' );
+			}
+			if ( ! defined( 'TB_SIDEBARS_PLUGIN_VERSION' ) ) {
+				$sidebars['null'] = __( 'You need to have the Theme Blvd Widget Areas plugin installed for this feature.', 'themeblvd_builder' );
+			}
 		}
 
 		// Setup array for categories select
@@ -218,7 +221,7 @@ class Theme_Blvd_Builder_API {
 			'query'		=> 'none',
 			'hook'		=> 'themeblvd_columns',
 			'shortcode'	=> false,
-			'desc' 		=> __( 'Row of columns with custom content', 'themeblvd' )
+			'desc' 		=> __( 'Row of columns with custom content', 'themeblvd_builder' )
 		);
 
 		// Options
@@ -229,7 +232,7 @@ class Theme_Blvd_Builder_API {
 		    ),
 		   	'setup' => array(
 				'id' 		=> 'setup',
-				'name'		=> __( 'Setup Columns', 'themeblvd' ),
+				'name'		=> __( 'Setup Columns', 'themeblvd_builder' ),
 				'desc'		=> __( 'Choose the number of columns along with the corresponding width configurations.', 'themeblvd_builder' ),
 				'type'		=> 'columns',
 				'options'	=> 'element'
@@ -276,18 +279,7 @@ class Theme_Blvd_Builder_API {
 			),
 			'subgroup_end' => array(
 		    	'type'		=> 'subgroup_end'
-		    ),
-		    'visibility' => array(
-		    	'id' 		=> 'visibility',
-				'name'		=> __( 'Responsive Visibility ', 'themeblvd_builder' ),
-				'desc'		=> __( 'Select any resolutions you\'d like to <em>hide</em> this element on. This is optional, but can be utilized to deliver different content to different devices.<br><br><em>Example: Hide an element on tablets and mobile devices & then create a second element that\'s hidden only on standard screen resolutions to take its place.</em>', 'themeblvd_builder' ),
-				'type'		=> 'multicheck',
-				'options'	=> array(
-					'hide_on_standard' 	=> __( 'Hide on Standard Resolutions', 'themeblvd_builder' ),
-					'hide_on_tablet' 	=> __( 'Hide on Tablets', 'themeblvd_builder' ),
-					'hide_on_mobile' 	=> __( 'Hide on Mobile Devices', 'themeblvd_builder' )
-				)
-			)
+		    )
 		);
 
 		/*--------------------------------------------*/
@@ -357,23 +349,12 @@ class Theme_Blvd_Builder_API {
 			),
 			'subgroup_end' => array(
 		    	'type'		=> 'subgroup_end'
-		    ),
-		    'visibility' => array(
-		    	'id' 		=> 'visibility',
-				'name'		=> __( 'Responsive Visibility ', 'themeblvd_builder' ),
-				'desc'		=> __( 'Select any resolutions you\'d like to <em>hide</em> this element on. This is optional, but can be utilized to deliver different content to different devices.<br><br><em>Example: Hide an element on tablets and mobile devices & then create a second element that\'s hidden only on standard screen resolutions to take its place.</em>', 'themeblvd_builder' ),
-				'type'		=> 'multicheck',
-				'options'	=> array(
-					'hide_on_standard' 	=> __( 'Hide on Standard Resolutions', 'themeblvd_builder' ),
-					'hide_on_tablet' 	=> __( 'Hide on Tablets', 'themeblvd_builder' ),
-					'hide_on_mobile' 	=> __( 'Hide on Mobile Devices', 'themeblvd_builder' )
-				)
-			)
+		    )
 		);
 
 		// The selection of a floating widget area is only
 		// possible if the Widget Areas plugin is installed.
-		if( ! defined( 'TB_SIDEBARS_PLUGIN_VERSION' ) ) {
+		if ( ! defined( 'TB_SIDEBARS_PLUGIN_VERSION' ) ) {
 			unset( $this->core_elements['content']['options']['source']['options']['widget_area'] );
 			unset( $this->core_elements['content']['options']['widget_area'] );
 		}
@@ -405,17 +386,6 @@ class Theme_Blvd_Builder_API {
 			        'dashed' 	=> __( 'Dashed Line', 'themeblvd_builder' ),
 			        'shadow' 	=> __( 'Shadow Line', 'themeblvd_builder' ),
 					'solid' 	=> __( 'Solid Line', 'themeblvd_builder' )
-				)
-			),
-		    'visibility' => array(
-		    	'id' 		=> 'visibility',
-				'name'		=> __( 'Responsive Visibility ', 'themeblvd_builder' ),
-				'desc'		=> __( 'Select any resolutions you\'d like to <em>hide</em> this element on. This is optional, but can be utilized to deliver different content to different devices.<br><br><em>Example: Hide an element on tablets and mobile devices & then create a second element that\'s hidden only on standard screen resolutions to take its place.</em>', 'themeblvd_builder' ),
-				'type'		=> 'multicheck',
-				'options'	=> array(
-					'hide_on_standard' 	=> __( 'Hide on Standard Resolutions', 'themeblvd_builder' ),
-					'hide_on_tablet' 	=> __( 'Hide on Tablets', 'themeblvd_builder' ),
-					'hide_on_mobile' 	=> __( 'Hide on Mobile Devices', 'themeblvd_builder' )
 				)
 			)
 		);
@@ -473,17 +443,6 @@ class Theme_Blvd_Builder_API {
 			        'left' 		=> __( 'Align Left', 'themeblvd_builder' ),
 			        'center' 	=> __( 'Center', 'themeblvd_builder' ),
 					'right' 	=> __( 'Align Right', 'themeblvd_builder' )
-				)
-			),
-		    'visibility' => array(
-		    	'id' 		=> 'visibility',
-				'name'		=> __( 'Responsive Visibility ', 'themeblvd_builder' ),
-				'desc'		=> __( 'Select any resolutions you\'d like to <em>hide</em> this element on. This is optional, but can be utilized to deliver different content to different devices.<br><br><em>Example: Hide an element on tablets and mobile devices & then create a second element that\'s hidden only on standard screen resolutions to take its place.</em>', 'themeblvd_builder' ),
-				'type'		=> 'multicheck',
-				'options'	=> array(
-					'hide_on_standard' 	=> __( 'Hide on Standard Resolutions', 'themeblvd_builder' ),
-					'hide_on_tablet' 	=> __( 'Hide on Tablets', 'themeblvd_builder' ),
-					'hide_on_mobile' 	=> __( 'Hide on Mobile Devices', 'themeblvd_builder' )
 				)
 			)
 		);
@@ -602,17 +561,6 @@ class Theme_Blvd_Builder_API {
 				'desc'		=> __( 'Enter in a custom image crop size. Always leave this blank unless you know what you\'re doing here. When left blank, the theme will generate this crop size for you depending on the amount of columns in your post grid.', 'themeblvd_builder' ),
 				'type'		=> 'text',
 				'std'		=> ''
-			),
-		    'visibility' => array(
-		    	'id' 		=> 'visibility',
-				'name'		=> __( 'Responsive Visibility ', 'themeblvd_builder' ),
-				'desc'		=> __( 'Select any resolutions you\'d like to <em>hide</em> this element on. This is optional, but can be utilized to deliver different content to different devices.<br><br><em>Example: Hide an element on tablets and mobile devices & then create a second element that\'s hidden only on standard screen resolutions to take its place.</em>', 'themeblvd_builder' ),
-				'type'		=> 'multicheck',
-				'options'	=> array(
-					'hide_on_standard' 	=> __( 'Hide on Standard Resolutions', 'themeblvd_builder' ),
-					'hide_on_tablet' 	=> __( 'Hide on Tablets', 'themeblvd_builder' ),
-					'hide_on_mobile' 	=> __( 'Hide on Mobile Devices', 'themeblvd_builder' )
-				)
 			)
 		);
 
@@ -779,18 +727,7 @@ class Theme_Blvd_Builder_API {
 			),
 			'subgroup_end_2' => array(
 		    	'type'		=> 'subgroup_end'
-		    ),
-		    'visibility' => array(
-		    	'id' 		=> 'visibility',
-				'name'		=> __( 'Responsive Visibility ', 'themeblvd_builder' ),
-				'desc'		=> __( 'Select any resolutions you\'d like to <em>hide</em> this element on. This is optional, but can be utilized to deliver different content to different devices.<br><br><em>Example: Hide an element on tablets and mobile devices & then create a second element that\'s hidden only on standard screen resolutions to take its place.</em>', 'themeblvd_builder' ),
-				'type'		=> 'multicheck',
-				'options'	=> array(
-					'hide_on_standard' 	=> __( 'Hide on Standard Resolutions', 'themeblvd_builder' ),
-					'hide_on_tablet' 	=> __( 'Hide on Tablets', 'themeblvd_builder' ),
-					'hide_on_mobile' 	=> __( 'Hide on Mobile Devices', 'themeblvd_builder' )
-				)
-			)
+		    )
 		);
 
 		/*--------------------------------------------*/
@@ -974,17 +911,6 @@ class Theme_Blvd_Builder_API {
 				'desc'		=> __( 'Enter in a custom image crop size. Always leave this blank unless you know what you\'re doing here. When left blank, the theme will generate this crop size for you depending on the amount of columns in your post grid.', 'themeblvd_builder' ),
 				'type'		=> 'text',
 				'std'		=> ''
-			),
-		    'visibility' => array(
-		    	'id' 		=> 'visibility',
-				'name'		=> __( 'Responsive Visibility ', 'themeblvd_builder' ),
-				'desc'		=> __( 'Select any resolutions you\'d like to <em>hide</em> this element on. This is optional, but can be utilized to deliver different content to different devices.<br><br><em>Example: Hide an element on tablets and mobile devices & then create a second element that\'s hidden only on standard screen resolutions to take its place.</em>', 'themeblvd_builder' ),
-				'type'		=> 'multicheck',
-				'options'	=> array(
-					'hide_on_standard' 	=> __( 'Hide on Standard Resolutions', 'themeblvd_builder' ),
-					'hide_on_tablet' 	=> __( 'Hide on Tablets', 'themeblvd_builder' ),
-					'hide_on_mobile' 	=> __( 'Hide on Mobile Devices', 'themeblvd_builder' )
-				)
 			)
 		);
 
@@ -1107,17 +1033,6 @@ class Theme_Blvd_Builder_API {
 					'default'	=> __( 'Use default primary posts display setting.', 'themeblvd_builder' ),
 					'content'	=> __( 'Show full content.', 'themeblvd_builder' ),
 					'excerpt' 	=> __( 'Show excerpt only.', 'themeblvd_builder' )
-				)
-			),
-		    'visibility' => array(
-		    	'id' 		=> 'visibility',
-				'name'		=> __( 'Responsive Visibility ', 'themeblvd_builder' ),
-				'desc'		=> __( 'Select any resolutions you\'d like to <em>hide</em> this element on. This is optional, but can be utilized to deliver different content to different devices.<br><br><em>Example: Hide an element on tablets and mobile devices & then create a second element that\'s hidden only on standard screen resolutions to take its place.</em>', 'themeblvd_builder' ),
-				'type'		=> 'multicheck',
-				'options'	=> array(
-					'hide_on_standard' 	=> __( 'Hide on Standard Resolutions', 'themeblvd_builder' ),
-					'hide_on_tablet' 	=> __( 'Hide on Tablets', 'themeblvd_builder' ),
-					'hide_on_mobile' 	=> __( 'Hide on Mobile Devices', 'themeblvd_builder' )
 				)
 			)
 		);
@@ -1292,18 +1207,7 @@ class Theme_Blvd_Builder_API {
 			),
 			'subgroup_end_2' => array(
 		    	'type'		=> 'subgroup_end'
-		    ),
-		    'visibility' => array(
-		    	'id' 		=> 'visibility',
-				'name'		=> __( 'Responsive Visibility ', 'themeblvd_builder' ),
-				'desc'		=> __( 'Select any resolutions you\'d like to <em>hide</em> this element on. This is optional, but can be utilized to deliver different content to different devices.<br><br><em>Example: Hide an element on tablets and mobile devices & then create a second element that\'s hidden only on standard screen resolutions to take its place.</em>', 'themeblvd_builder' ),
-				'type'		=> 'multicheck',
-				'options'	=> array(
-					'hide_on_standard' 	=> __( 'Hide on Standard Resolutions', 'themeblvd_builder' ),
-					'hide_on_tablet' 	=> __( 'Hide on Tablets', 'themeblvd_builder' ),
-					'hide_on_mobile' 	=> __( 'Hide on Mobile Devices', 'themeblvd_builder' )
-				)
-			)
+		    )
 		);
 
 		/*--------------------------------------------*/
@@ -1492,17 +1396,6 @@ class Theme_Blvd_Builder_API {
 				'desc'		=> __( 'Enter in the number of posts <strong>per slide</strong> you\'d like to show.', 'themeblvd_builder' ),
 				'type'		=> 'text',
 				'std'		=> '3'
-			),
-		    'visibility' => array(
-		    	'id' 		=> 'visibility',
-				'name'		=> __( 'Responsive Visibility ', 'themeblvd_builder' ),
-				'desc'		=> __( 'Select any resolutions you\'d like to <em>hide</em> this element on. This is optional, but can be utilized to deliver different content to different devices.<br><br><em>Example: Hide an element on tablets and mobile devices & then create a second element that\'s hidden only on standard screen resolutions to take its place.</em>', 'themeblvd_builder' ),
-				'type'		=> 'multicheck',
-				'options'	=> array(
-					'hide_on_standard' 	=> __( 'Hide on Standard Resolutions', 'themeblvd_builder' ),
-					'hide_on_tablet' 	=> __( 'Hide on Tablets', 'themeblvd_builder' ),
-					'hide_on_mobile' 	=> __( 'Hide on Mobile Devices', 'themeblvd_builder' )
-				)
 			)
 		);
 
@@ -1510,7 +1403,7 @@ class Theme_Blvd_Builder_API {
 		/* (11) Post Slider
 		/*--------------------------------------------*/
 
-		if( defined( 'TB_SLIDERS_PLUGIN_VERSION' ) ) {
+		if ( defined( 'TB_SLIDERS_PLUGIN_VERSION' ) ) {
 
 			$this->core_elements['post_slider'] = array();
 
@@ -1749,17 +1642,6 @@ class Theme_Blvd_Builder_API {
 						'first_slide' 	=> __( 'Show first slide only for a more simple mobile experience.', 'themeblvd_builder' ),
 						'display' 		=> __( 'Attempt to show full animated slider on mobile devices.', 'themeblvd_builder' )
 					)
-				),
-			    'visibility' => array(
-			    	'id' 		=> 'visibility',
-					'name'		=> __( 'Responsive Visibility ', 'themeblvd_builder' ),
-					'desc'		=> __( 'Select any resolutions you\'d like to <em>hide</em> this element on. This is optional, but can be utilized to deliver different content to different devices.<br><br><em>Example: Hide an element on tablets and mobile devices & then create a second element that\'s hidden only on standard screen resolutions to take its place.</em>', 'themeblvd_builder' ),
-					'type'		=> 'multicheck',
-					'options'	=> array(
-						'hide_on_standard' 	=> __( 'Hide on Standard Resolutions', 'themeblvd_builder' ),
-						'hide_on_tablet' 	=> __( 'Hide on Tablets', 'themeblvd_builder' ),
-						'hide_on_mobile' 	=> __( 'Hide on Mobile Devices', 'themeblvd_builder' )
-					)
 				)
 			);
 
@@ -1769,7 +1651,7 @@ class Theme_Blvd_Builder_API {
 		/* (12) Slider
 		/*--------------------------------------------*/
 
-		if( defined( 'TB_SLIDERS_PLUGIN_VERSION' ) ) {
+		if ( defined( 'TB_SLIDERS_PLUGIN_VERSION' ) ) {
 
 			$this->core_elements['slider'] = array();
 
@@ -1796,17 +1678,6 @@ class Theme_Blvd_Builder_API {
 					'desc'		=> __( 'Choose from the sliders you\'ve created. You can edit these sliders at any time under the \'Sliders\' tab above.', 'themeblvd_builder' ),
 					'type'		=> 'select',
 					'options'	=> themeblvd_get_select( 'sliders' )
-				),
-			    'visibility' => array(
-			    	'id' 		=> 'visibility',
-					'name'		=> __( 'Responsive Visibility ', 'themeblvd_builder' ),
-					'desc'		=> __( 'Select any resolutions you\'d like to <em>hide</em> this element on. This is optional, but can be utilized to deliver different content to different devices.<br><br><em>Example: Hide an element on tablets and mobile devices & then create a second element that\'s hidden only on standard screen resolutions to take its place.</em>', 'themeblvd_builder' ),
-					'type'		=> 'multicheck',
-					'options'	=> array(
-						'hide_on_standard' 	=> __( 'Hide on Standard Resolutions', 'themeblvd_builder' ),
-						'hide_on_tablet' 	=> __( 'Hide on Tablets', 'themeblvd_builder' ),
-						'hide_on_mobile' 	=> __( 'Hide on Mobile Devices', 'themeblvd_builder' )
-					)
 				)
 			);
 
@@ -1912,18 +1783,7 @@ class Theme_Blvd_Builder_API {
 			),
 			'subgroup_end' => array(
 		    	'type'		=> 'subgroup_end'
-		    ),
-		    'visibility' => array(
-		    	'id' 		=> 'visibility',
-				'name'		=> __( 'Responsive Visibility ', 'themeblvd_builder' ),
-				'desc'		=> __( 'Select any resolutions you\'d like to <em>hide</em> this element on. This is optional, but can be utilized to deliver different content to different devices.<br><br><em>Example: Hide an element on tablets and mobile devices & then create a second element that\'s hidden only on standard screen resolutions to take its place.</em>', 'themeblvd_builder' ),
-				'type'		=> 'multicheck',
-				'options'	=> array(
-					'hide_on_standard' 	=> __( 'Hide on Standard Resolutions', 'themeblvd_builder' ),
-					'hide_on_tablet' 	=> __( 'Hide on Tablets', 'themeblvd_builder' ),
-					'hide_on_mobile' 	=> __( 'Hide on Mobile Devices', 'themeblvd_builder' )
-				)
-			)
+		    )
 		);
 
 		/*--------------------------------------------*/
@@ -2047,19 +1907,50 @@ class Theme_Blvd_Builder_API {
 			),
 			'subgroup_end' => array(
 		    	'type'		=> 'subgroup_end'
-		    ),
-		    'visibility' => array(
+		    )
+		);
+
+		/*--------------------------------------------*/
+		/* Global element options
+		/*--------------------------------------------*/
+
+		$screen_options = Theme_Blvd_Layout_Builder_Screen::get_instance();
+		$screen_settings = $screen_options->get_value();
+
+		foreach ( $this->core_elements as $id => $element ) {
+
+			// Responsive Visibility
+			$this->core_elements[$id]['options']['visibility'] = array(
 		    	'id' 		=> 'visibility',
-				'name'		=> __( 'Responsive Visibility ', 'themeblvd_builder' ),
-				'desc'		=> __( 'Select any resolutions you\'d like to <em>hide</em> this element on. This is optional, but can be utilized to deliver different content to different devices.<br><br><em>Example: Hide an element on tablets and mobile devices & then create a second element that\'s hidden only on standard screen resolutions to take its place.</em>', 'themeblvd_builder' ),
+				'name'		=> __( 'Responsive Visibility', 'themeblvd_builder' ),
+				'desc'		=> __( 'Select any resolutions you\'d like to <em>hide</em> this element on. This is optional, but can be utilized to deliver different content to different devices.', 'themeblvd_builder' ),
 				'type'		=> 'multicheck',
+				'class'		=> 'section-visibility',
 				'options'	=> array(
 					'hide_on_standard' 	=> __( 'Hide on Standard Resolutions', 'themeblvd_builder' ),
 					'hide_on_tablet' 	=> __( 'Hide on Tablets', 'themeblvd_builder' ),
 					'hide_on_mobile' 	=> __( 'Hide on Mobile Devices', 'themeblvd_builder' )
 				)
-			)
-		);
+			);
+
+			if ( empty( $screen_settings['visibility'] ) ) {
+				$this->core_elements[$id]['options']['visibility']['class'] .= ' hide';
+			}
+
+			// CSS Classes
+			$this->core_elements[$id]['options']['classes'] = array(
+		    	'id' 		=> 'classes',
+				'name'		=> __( 'CSS Classes', 'themeblvd_builder' ),
+				'desc'		=> __( 'Enter any CSS classes you\'d like attached to the element.', 'themeblvd_builder' ),
+				'type'		=> 'text',
+				'class'		=> 'section-classes'
+			);
+
+			if ( empty( $screen_settings['classes'] ) ) {
+				$this->core_elements[$id]['options']['classes']['class'] .= ' hide';
+			}
+
+		}
 
 		/*--------------------------------------------*/
 		/* Extend
@@ -2083,9 +1974,9 @@ class Theme_Blvd_Builder_API {
 		$this->elements = array_merge( $this->core_elements, $this->client_elements );
 
 		// Remove elements
-		if( $this->remove_elements ) {
-			foreach( $this->remove_elements as $element_id ) {
-				if( isset( $this->elements[$element_id] ) ) {
+		if ( $this->remove_elements ) {
+			foreach ( $this->remove_elements as $element_id ) {
+				if ( isset( $this->elements[$element_id] ) ) {
 					unset( $this->elements[$element_id] );
 				}
 			}
@@ -2745,8 +2636,8 @@ class Theme_Blvd_Builder_API {
 	public function set_layouts() {
 
 		// Format client API-added sample layouts
-		if( $this->client_layouts ) {
-			foreach( $this->client_layouts as $id => $layouts ) {
+		if ( $this->client_layouts ) {
+			foreach ( $this->client_layouts as $id => $layouts ) {
 
 				// Establish areas
 				$this->client_layouts[$id]['featured'] = array();
@@ -2755,34 +2646,39 @@ class Theme_Blvd_Builder_API {
 
 				// Loop through and format elements, splitting them into
 				// their areas -- featured, primary, & featured_below
-				if( $layouts['elements'] ) {
+				if ( $layouts['elements'] ) {
 					$i = 1;
-					foreach( $layouts['elements'] as $element ) {
+					foreach ( $layouts['elements'] as $element ) {
 
 						// Skip if the element isn't registered
-						if( ! $this->is_element( $element['type'] ) )
+						if ( ! $this->is_element( $element['type'] ) ) {
 							continue;
+						}
 
 						// Setup default option values
 						$options = array();
-						if( ! empty( $element['defaults'] ) ) {
-							foreach( $this->elements[$element['type']]['options'] as $option ) {
+						if ( ! empty( $element['defaults'] ) ) {
+							foreach ( $this->elements[$element['type']]['options'] as $option ) {
 
 								// Is this an actual configurable option?
-								if( ! isset( $option['id'] ) )
+								if ( ! isset( $option['id'] ) ) {
 									continue;
+								}
 
 								$default_value = null;
 
 								// Did the client put in a default value for this element?
-								foreach( $element['defaults'] as $key => $value )
-									if( $key == $option['id'] )
+								foreach ( $element['defaults'] as $key => $value ) {
+									if ( $key == $option['id'] ) {
 										$default_value = $value;
+									}
+								}
 
 								// Is there a default value for the element in the builder
 								// we can use instead if client didn't pass one?
-								if( $default_value === null && isset( $option['std'] ) )
+								if ( $default_value === null && isset( $option['std'] ) ) {
 									$default_value = $option['std'];
+								}
 
 								// Apply value
 								$options[$option['id']] = $default_value;
@@ -2812,8 +2708,8 @@ class Theme_Blvd_Builder_API {
 		$this->layouts = array_merge( $this->core_layouts, $this->client_layouts );
 
 		// Remove layouts
-		if( $this->remove_layouts ) {
-			foreach( $this->remove_layouts as $layout ) {
+		if ( $this->remove_layouts ) {
+			foreach ( $this->remove_layouts as $layout ) {
 				unset( $this->layouts[$layout] );
 			}
 		}
@@ -2854,12 +2750,14 @@ class Theme_Blvd_Builder_API {
 	 */
 	public function de_register_element( $id ) {
 
-		if( ! $this->registered_elements )
+		if ( ! $this->registered_elements ) {
 			return;
+		}
 
-		foreach( $this->registered_elements as $key => $element ) {
-			if( $id == $element )
+		foreach ( $this->registered_elements as $key => $element ) {
+			if ( $id == $element ) {
 				unset( $this->registered_elements[$key] );
+			}
 		}
 
 	}
@@ -2881,7 +2779,7 @@ class Theme_Blvd_Builder_API {
 		$this->registered_elements[] = $element_id;
 
 		// Add in element
-		if( is_admin() ) {
+		if ( is_admin() ) {
 			$this->client_elements[$element_id] = array(
 				'info' => array(
 					'name' 		=> $element_name,
@@ -2913,9 +2811,9 @@ class Theme_Blvd_Builder_API {
 		$this->remove_elements[] = $element_id;
 
 		// De-register Element
-		if( $this->registered_elements ) {
-			foreach( $this->registered_elements as $key => $value ) {
-				if( $value == $element_id ) {
+		if ( $this->registered_elements ) {
+			foreach ( $this->registered_elements as $key => $value ) {
+				if ( $value == $element_id ) {
 					unset( $this->registered_elements[$key] );
 				}
 			}
@@ -2951,7 +2849,7 @@ class Theme_Blvd_Builder_API {
 	public function add_layout( $layout_id, $layout_name, $preview, $sidebar_layout, $elements ) {
 
 		// WP-Admin only
-		if( is_admin() ) {
+		if ( is_admin() ) {
 			$this->client_layouts[$layout_id] = array(
 				'name' 				=> $layout_name,
 				'id' 				=> $layout_id,
@@ -2973,7 +2871,7 @@ class Theme_Blvd_Builder_API {
 	public function remove_layout( $layout_id ) {
 
 		// Add to removal array, and process in set_elements()
-		if( is_admin() ) {
+		if ( is_admin() ) {
 			$this->remove_layouts[] = $layout_id;
 		}
 
@@ -3078,8 +2976,9 @@ class Theme_Blvd_Builder_API {
 	 */
 	public function is_element( $element_id ) {
 
-		if( in_array( $element_id, $this->registered_elements ) )
+		if ( in_array( $element_id, $this->registered_elements ) ) {
 			return true;
+		}
 
 		return false;
 	}
