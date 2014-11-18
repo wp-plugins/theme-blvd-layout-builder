@@ -1,86 +1,5 @@
 <?php
 /**
- * Disable a nag message.
- *
- * @since 1.1.0
- */
-function themeblvd_builder_disable_nag() {
-	global $current_user;
-    if ( isset( $_GET['tb_nag_ignore'] ) ) {
-         add_user_meta( $current_user->ID, $_GET['tb_nag_ignore'], 'true', true );
-	}
-}
-
-/**
- * Disable a nag message URL.
- *
- * @since 1.2.0
- */
-function themeblvd_builder_disable_url( $id ) {
-
-	global $pagenow;
-
-	$url = admin_url( $pagenow );
-
-	if ( ! empty( $_SERVER['QUERY_STRING'] ) ) {
-		$url .= sprintf( '?%s&tb_nag_ignore=%s', $_SERVER['QUERY_STRING'], $id );
-	} else {
-		$url .= sprintf( '?tb_nag_ignore=%s', $id );
-	}
-
-	return $url;
-}
-
-/**
- * Display warning telling the user they must have a
- * theme with Theme Blvd framework v2.2+ installed in
- * order to run this plugin.
- *
- * @since 1.0.0
- */
-function themeblvd_builder_warning() {
-	global $current_user;
-    if ( ! get_user_meta( $current_user->ID, 'tb_builder_warning' ) ) {
-		echo '<div class="updated">';
-		echo '<p>'.__( 'You currently have the "Theme Blvd Layout Builder" plugin activated, however you are not using a theme with Theme Blvd Framework v2.2+, and so this plugin will not do anything.', 'themeblvd_builder' ).'</p>';
-		echo '<p><a href="'.themeblvd_builder_disable_url('tb_builder_warning').'">'.__('Dismiss this notice', 'themeblvd_builder').'</a> | <a href="http://www.themeblvd.com" target="_blank">'.__('Visit ThemeBlvd.com', 'themeblvd_builder').'</a></p>';
-		echo '</div>';
-	}
-}
-
-/**
- * Display warning telling the user they should be using
- * theme with Theme Blvd framework v2.2.1+.
- *
- * @since 1.1.0
- */
-function themeblvd_builder_warning_2() {
-	global $current_user;
-    if ( ! get_user_meta( $current_user->ID, 'tb_builder_warning_2' ) ) {
-        echo '<div class="updated">';
-        echo '<p>'.__( 'You are currently running a theme with Theme Blvd framework v2.2.0. To get the best results from this version of the Theme Blvd Layout Builder, you should update your current theme to its latest version, which will contain framework v2.2.1+.', 'themeblvd_builder' ).'</p>';
-        echo '<p><a href="'.themeblvd_builder_disable_url('tb_builder_warning_2').'">'.__('Dismiss this notice', 'themeblvd_builder').'</a></p>';
-        echo '</div>';
-    }
-}
-
-/**
- * Display warning telling the user they should be using
- * theme with Theme Blvd framework v2.2.1+.
- *
- * @since 1.2.0
- */
-function themeblvd_builder_warning_3() {
-	global $current_user;
-    if ( ! get_user_meta( $current_user->ID, 'tb_builder_warning_3' ) ) {
-        echo '<div class="updated">';
-        echo '<p>'.__( 'If you\'re using any Layout Builder API functions to <a href="http://dev.themeblvd.com/tutorial/add-remove-builder-elements/" target="_blank">modify elements</a> or <a href="http://dev.themeblvd.com/tutorial/add-remove-sample-layout/" target="_blank">modify sample layouts</a>, you need to update your current theme to its latest version, which will contain framework v2.3+, in order for these API functions to continue working properly.', 'themeblvd_builder' ).'</p>';
-        echo '<p><a href="'.themeblvd_builder_disable_url('tb_builder_warning_3').'">'.__('Dismiss this notice', 'themeblvd_builder').'</a></p>';
-        echo '</div>';
-    }
-}
-
-/**
  * Register hidden custom post type for layouts.
  *
  * @since 1.2.0
@@ -99,404 +18,303 @@ function themeblvd_builder_register_post_type() {
 	));
 	register_post_type( 'tb_layout', $args );
 }
-/**
- * Redirect homepage to index.php to the custom
- * layout template if option is set. This is
- * filtered to template_include.
- *
- * @since 1.0.1
- */
-function themeblvd_builder_homepage( $template ) {
 
-	// If this is the homepage (but NOT the "posts page")
-	// and the user has selected to show a custom layout,
-	// redirect index.php to template_builder.php
-	if ( is_home() && 'posts' == get_option('show_on_front') && 'custom_layout' == themeblvd_get_option( 'homepage_content', null, 'posts' ) ) {
-		$template = locate_template( 'template_builder.php' );
+/**
+ * Display custom layout for themes with framework v2.5+
+ *
+ * @since 2.0.0
+ *
+ * @param string $context Where the custom layout is being outputted, main or footer
+ */
+function themeblvd_builder_layout( $context ) {
+
+	global $post;
+
+	// Check to make sure theme is up to date for this process.
+	if ( ! function_exists( 'themeblvd_elements' ) ) {
+		return;
 	}
 
-	return $template;
+	// Where to pull custom layout data from. Will either be
+	// current page or synced template.
+	if ( $context == 'footer' ) {
+		$post_id = themeblvd_config( 'bottom_builder_post_id' );
+	} else {
+		$post_id = themeblvd_config( 'builder_post_id' );
+	}
+
+	// Get section data
+	$section_data = get_post_meta( $post_id, '_tb_builder_sections', true );
+
+	if ( ! $section_data ) {
+		echo '<section class="element-section">';
+		printf('<div class="alert alert-warning">%s</div>', __('The template has not been configured yet.', 'theme-blvd-layout-builder'));
+		echo '</section>';
+		return;
+	}
+
+	// Get elements for layout, which are organized within sections
+	$sections = get_post_meta( $post_id, '_tb_builder_elements', true );
+
+	// Loop through sections of elements
+	if ( $sections ) {
+
+		// Check for pagination handling
+		$sections = themeblvd_builder_paginated_layout( $post_id, $sections );
+
+		// Display sections of elements
+		foreach ( $sections as $section_id => $elements ) {
+
+			// Section classes
+			$class = implode( ' ', themeblvd_get_section_class( $section_id, $section_data[$section_id], count($elements) ) );
+
+			// Display settings for section
+			$display = array();
+
+			if ( isset( $section_data[$section_id]['display'] ) ) {
+				$display = $section_data[$section_id]['display'];
+			}
+
+			// Open section
+			do_action( 'themeblvd_section_before', $section_id, $section_data[$section_id] );
+
+			printf( '<section class="%s" data-parallax="%s">', $class, themeblvd_get_parallax_intensity($display) );
+
+			if ( $display ) {
+
+				if ( ( $display['bg_type'] == 'image' || $display['bg_type'] == 'slideshow' ) && ! empty($display['apply_bg_shade']) ) {
+					printf( '<div class="bg-shade" style="background-color: %s; background-color: %s;"></div>', $display['bg_shade_color'], themeblvd_get_rgb( $display['bg_shade_color'], $display['bg_shade_opacity'] ) );
+				}
+
+				if ( $display['bg_type'] == 'slideshow' && ! empty($display['bg_slideshow']) ) {
+
+					$parallax = 0;
+
+					if ( ! empty($display['apply_bg_slideshow_parallax']) ) {
+						$parallax = $display['bg_slideshow_parallax'];
+					}
+
+					themeblvd_bg_slideshow( $section_id, $display['bg_slideshow'], $parallax );
+				}
+			}
+
+			do_action( 'themeblvd_section_top', $section_id, $section_data[$section_id] );
+
+			// Display elements
+			themeblvd_elements( $section_id, $elements );
+
+			// Close section
+			do_action( 'themeblvd_section_bottom', $section_id, $section_data[$section_id] );
+			printf( '</section><!-- #%s (end) -->', $section_id );
+			do_action( 'themeblvd_section_after', $section_id, $section_data[$section_id] );
+
+			// End section
+			do_action( 'themeblvd_section_close', $section_data[$section_id]['display'] );
+
+		}
+
+	} else {
+
+		echo '<section class="element-section">';
+		printf('<div class="alert alert-warning">%s</div>', __('No element data could be found for this custom layout.', 'theme-blvd-layout-builder'));
+		echo '</section>';
+
+	}
+
 }
 
 /**
- * Add custom homepage options to customizer framework.
+ * Verify data from current custom layout is saved
+ * properly with the current version of the Layout
+ * Builder plugin.
  *
- * @since 1.0.0
+ * @since 2.0.0
  */
-function themeblvd_modify_customizer_homepage( $sections ) {
-	$sections[] = 'static_front_page';
+function themeblvd_builder_verify_data() {
+	if ( themeblvd_config( 'builder' ) && themeblvd_config( 'builder_post_id' ) ) {
+		$data = new Theme_Blvd_Layout_Builder_Data( themeblvd_config( 'builder_post_id' ) );
+		$data->verify('elements');
+		$data->verify('info');
+		$data->finalize();
+	}
+}
+
+/**
+ * If we're on the second page of a paginated query,
+ * we'll find the paginated element and see if all other
+ * elements should be hidden. If so, we'll modify the sections
+ * of elements to display.
+ *
+ * @since 2.0.0
+ *
+ * @param string $var Description
+ * @return string $var Description
+ */
+function themeblvd_builder_paginated_layout( $post_id, $sections ) {
+
+	if ( is_paged() ) {
+
+		$show_section_id = '';
+		$show_element_id = '';
+
+		// Hunt for the actual ID's of section and element we're going to keep.
+		foreach ( $sections as $section_id => $elements ) {
+			if ( $elements ) {
+				foreach ( $elements as $element_id => $element ) {
+
+					if ( ! isset( $element['type'] ) ) {
+						continue;
+					}
+
+					if ( $element['type'] == 'blog' || $element['type'] == 'post_list' || $element['type'] == 'post_grid' ) {
+
+						if ( ! empty( $element['options']['paginated_hide'] ) ) {
+							$show_section_id = $section_id;
+							$show_element_id = $element_id;
+						}
+
+					} else if ( $element['type'] == 'columns' ) {
+
+						$num = count( explode( '-', $element['options']['setup'] ) );
+
+						for ( $i = 1; $i <= $num; $i++ ) {
+
+							$blocks = get_post_meta( $post_id, '_tb_builder_'.$element_id.'_col_'.$i, true );
+
+							if ( ! empty( $blocks['elements'] ) ) {
+								foreach ( $blocks['elements'] as $block_id => $block ) {
+									if ( ! empty( $block['options']['paginated_hide'] ) ) {
+										$show_section_id = $section_id;
+										$show_element_id = $element_id;
+									}
+								}
+							}
+						} // end for $i
+					}
+				} // end foreach $elements
+			}
+		} // end foreach $sections
+
+		// Now remove everything that isn't part of what we want to keep.
+		if ( $show_section_id && $show_element_id ) {
+			foreach ( $sections as $section_id => $elements ) {
+
+				if ( $section_id != $show_section_id ) {
+					unset( $sections[$section_id] );
+					continue;
+				}
+
+				if ( $elements ) {
+					foreach ( $elements as $element_id => $element ) {
+						if ( $element_id != $show_element_id ) {
+							unset( $sections[$section_id][$element_id] );
+						}
+					}
+				}
+			}
+		}
+
+	} // end if ( is_paged() )
+
 	return $sections;
 }
 
 /**
- * Display custom layout within template_builder.php
- * page template.
+ * Add external styles for Builder sections
  *
- * When each element is displayed, it is done so with
- * an external function. This will allow some elements
- * to be used for other things such as shortcodes.
- * However, even elements that shouldn't have an external
- * function do to allow those elements to be indidivually
- * edited from a child theme.
+ * @since 2.0.0
  *
- * @since 1.0.0
- *
- * @param string $layout_id Post ID for custom layout
- * @param string $location Location of elements, featured or primary
+ * @param string $var Description
+ * @return string $var Description
  */
-function themeblvd_builder_elements( $layout_id, $location ) {
+function themeblvd_builder_styles() {
 
-	$api = Theme_Blvd_Builder_API::get_instance();
+	$layouts = array();
 
-	// Setup
-	$counter = 0;
-	$primary_query = false;
-	if ( ! $layout_id ) {
-		// This should rarely happen. A common scenario might
-		// be the user setup a page with a layout, but then
-		// deleted the layout after page was already published.
-		echo themeblvd_get_local( 'invalid_layout' );
-		return;
+	if ( themeblvd_config('builder_post_id') ) {
+		$layouts['main'] = themeblvd_config('builder_post_id');
 	}
-	// Gather elements and only move forward if we have elements to show.
-	$elements = get_post_meta( $layout_id, 'elements', true );
-	if ( ! empty( $elements ) && ! empty( $elements[$location] ) ) {
-		$elements = $elements[$location];
-		$num_elements = count($elements);
-	} else {
-		// If there are no elements in this location,
-		// get us out of here!
+
+	if ( themeblvd_config('bottom_builder_post_id') ) {
+		$layouts['bottom'] = themeblvd_config('bottom_builder_post_id');
+	}
+
+	if ( ! $layouts ) {
 		return;
 	}
 
-	// Loop through elements
-	foreach ( $elements as $id => $element ) {
+	$print = '';
 
-		// Skip element if its type isn't registered
-		if ( ! $api->is_element( $element['type'] ) ) {
-			continue;
-		}
+	foreach ( $layouts as $location => $post_id ) {
 
-		// Increase counter
-		$counter++;
+		$sections = get_post_meta( $post_id, '_tb_builder_sections', true );
 
-		// CSS classes for element
-		$classes = 'element '.$location.'-element-'.$counter.' element-'.$element['type'];
-		if ( $counter == 1 ) {
-			$classes .= ' first-element';
-		}
-		if ( $num_elements == $counter ) {
-			$classes .= ' last-element';
-		}
-		if ( $element['type'] == 'slider' ) {
-			if ( isset( $element['options']['slider_id'] ) ) {
-				$slider_id = themeblvd_post_id_by_name( $element['options']['slider_id'], 'tb_slider' );
-				$type = get_post_meta( $slider_id, 'type', true );
-				$classes .= ' element-slider-'.$type;
+		if ( $sections ) {
+			foreach ( $sections as $section_id => $section ) {
+
+				$section_print = '';
+				$styles = themeblvd_get_display_inline_style( $section['display'], 'external' );
+
+				if ( $styles ) {
+
+					foreach ( $styles as $type => $params ) {
+
+						if ( ! $params ) {
+							continue;
+						}
+
+						$indent = '';
+
+						if ( $type != 'general' ) {
+							$indent = "\t";
+						}
+
+						switch ( $type ) {
+							case 'desktop' :
+								$section_print .= "@media (min-width: 993px) {\n";
+								break;
+							case 'tablet' :
+								$section_print .= "@media (max-width: 992px) and (min-width: 768px) {\n";
+								break;
+							case 'mobile' :
+								$section_print .= "@media (max-width: 767px) {\n";
+						}
+
+						if ( strpos($section_id, 'section_') === false ) {
+							$section_id = 'section_'.$section_id;
+						}
+
+						$section_print .= $indent.sprintf("#custom-%s > .%s {\n", $location, $section_id);
+
+						foreach ( $params as $prop => $value ) {
+							$prop = str_replace('-2', '', $prop);
+							$section_print .= $indent.sprintf("\t%s: %s;\n", $prop, $value);
+						}
+
+						$section_print .= $indent."}\n";
+
+						if ( $type != 'general' ) {
+							$section_print .= "}\n";
+						}
+
+					}
+
+				}
+
+				if ( $section_print ) {
+					$print .= sprintf("\n/* %s */\n", $section['label']);
+					$print .= $section_print;
+				}
+
 			}
 		}
-		if ( $element['type'] == 'paginated_post_lst' || $element['type'] == 'paginated_post_grid' ) {
-			$classes .= $element['type'];
-		}
-		if ( ! empty( $element['options']['classes'] ) ) {
-			$classes .= ' '.$element['options']['classes'];
-		}
-		if ( isset( $element['options']['visibility'] ) ) {
-			$classes .= themeblvd_responsive_visibility_class( $element['options']['visibility'], true );
-		}
-		$classes .= themeblvd_get_classes( 'element_'.$element['type'], true, false, $element['type'], $element['options'], $location );
 
-		// Start ouput
-		do_action( 'themeblvd_element_'.$element['type'].'_before', $id, $element['options'], $location ); // Before element: themeblvd_element_{type}_before
-		do_action( 'themeblvd_element_open', $element['type'], $location, $classes );
-		do_action( 'themeblvd_element_'.$element['type'].'_top', $id, $element['options'], $location ); // Top of element: themeblvd_element_{type}_top
-		echo '<div class="grid-protection">';
-
-		switch( $element['type'] ) {
-
-			/*------------------------------------------------------*/
-			/* Columns
-			/*------------------------------------------------------*/
-
-			case 'columns' :
-
-				if ( ! function_exists( 'themeblvd_columns' ) ) {
-					_e('Columns element not supported.', 'themeblvd_builder');
-					break;
-				}
-
-				$i = 1;
-				$columns = array();
-				$num = $element['options']['setup']['num'];
-				while ( $i <= $num ) {
-					$columns[] = $element['options']['col_'.$i];
-					$i++;
-				}
-				themeblvd_columns( $num, $element['options']['setup']['width'][$num], $columns );
-				break;
-
-			/*------------------------------------------------------*/
-			/* Content
-			/*------------------------------------------------------*/
-
-			case 'content' :
-
-				if ( ! function_exists( 'themeblvd_content' ) ) {
-					_e('Content element not supported.', 'themeblvd_builder');
-					break;
-				}
-
-				echo themeblvd_content( $element['options'] );
-
-				break;
-
-			/*------------------------------------------------------*/
-			/* Divider
-			/*------------------------------------------------------*/
-
-			case 'divider' :
-
-				if ( ! function_exists( 'themeblvd_divider' ) ) {
-					_e('Divider element not supported.', 'themeblvd_builder');
-					break;
-				}
-
-				echo themeblvd_divider( $element['options']['type'] );
-
-				break;
-
-			/*------------------------------------------------------*/
-			/* Headline
-			/*------------------------------------------------------*/
-
-			case 'headline' :
-
-				if ( ! function_exists( 'themeblvd_headline' ) ) {
-					_e('Headline element not supported.', 'themeblvd_builder');
-					break;
-				}
-
-				echo themeblvd_headline( $element['options'] );
-
-				break;
-
-			/*------------------------------------------------------*/
-			/* Jumbotron
-			/*------------------------------------------------------*/
-
-			case 'jumbotron' :
-
-				if ( ! function_exists( 'themeblvd_jumbotron' ) ) {
-					_e('Jumbotron element not supported.', 'themeblvd_builder');
-					break;
-				}
-
-				themeblvd_jumbotron( $element['options'] );
-
-				break;
-
-			/*------------------------------------------------------*/
-			/* Post Grid
-			/*------------------------------------------------------*/
-
-			case 'post_grid' :
-
-				if ( ! function_exists( 'themeblvd_posts' ) ) {
-					_e('Post Grid element not supported.', 'themeblvd_builder');
-					break;
-				}
-
-				themeblvd_posts( $element['options'], 'grid', $location, 'secondary' );
-
-				break;
-
-			/*------------------------------------------------------*/
-			/* Post Grid (paginated)
-			/*------------------------------------------------------*/
-
-			case 'post_grid_paginated' :
-
-				if ( ! function_exists( 'themeblvd_posts_paginated' ) ) {
-					_e('Paginated Post Grid element not supported.', 'themeblvd_builder');
-					break;
-				}
-
-				if ( ! $primary_query ) {
-					themeblvd_posts_paginated( $element['options'], 'grid', $location );
-					$primary_query = true;
-				}
-
-				break;
-
-			/*------------------------------------------------------*/
-			/* Post Grid Slider
-			/*------------------------------------------------------*/
-
-			case 'post_grid_slider' :
-
-				if ( ! function_exists( 'themeblvd_post_slider' ) ) {
-					_e('Post Grid Slider element not supported.', 'themeblvd_builder');
-					break;
-				}
-
-				themeblvd_post_slider( $id, $element['options'], 'grid', $location );
-
-				break;
-
-			/*------------------------------------------------------*/
-			/* Post List
-			/*------------------------------------------------------*/
-
-			case 'post_list' :
-
-				if ( ! function_exists( 'themeblvd_posts' ) ) {
-					_e('Post List element not supported.', 'themeblvd_builder');
-					break;
-				}
-
-				themeblvd_posts( $element['options'], 'list', $location, 'secondary' );
-
-				break;
-
-			/*------------------------------------------------------*/
-			/* Post List (paginated)
-			/*------------------------------------------------------*/
-
-			case 'post_list_paginated' :
-
-				if ( ! function_exists( 'themeblvd_posts_paginated' ) ) {
-					_e('Paginated Post List element not supported.', 'themeblvd_builder');
-					break;
-				}
-
-				if ( ! $primary_query ) {
-					themeblvd_posts_paginated( $element['options'], 'list', $location );
-					$primary_query = true;
-				}
-
-				break;
-
-			/*------------------------------------------------------*/
-			/* Post List Slider
-			/*------------------------------------------------------*/
-
-			case 'post_list_slider' :
-
-				if ( ! function_exists( 'themeblvd_post_slider' ) ) {
-					_e('Post List Slider element not supported.', 'themeblvd_builder');
-					break;
-				}
-
-				themeblvd_post_slider( $id, $element['options'], 'list', $location );
-
-				break;
-
-			/*------------------------------------------------------*/
-			/* Post Slider (mimics standard slider)
-			/*------------------------------------------------------*/
-
-			case 'post_slider' :
-
-				if ( ! function_exists( 'themeblvd_slider_auto' ) ) {
-					_e('Post Slider element not supported.', 'themeblvd_builder');
-					break;
-				}
-
-				themeblvd_slider_auto( $id, $element['options'] );
-
-				break;
-
-			/*------------------------------------------------------*/
-			/* Slider
-			/*------------------------------------------------------*/
-
-			case 'slider' :
-
-				if ( ! function_exists( 'themeblvd_slider' ) ) {
-					_e('Slider element not supported.', 'themeblvd_builder');
-					break;
-				}
-
-				themeblvd_slider( $element['options']['slider_id'] );
-
-				break;
-
-			/*------------------------------------------------------*/
-			/* Slogan
-			/*------------------------------------------------------*/
-
-			case 'slogan' :
-
-				if ( ! function_exists( 'themeblvd_slogan' ) ) {
-					_e('Slogan element not supported.', 'themeblvd_builder');
-					break;
-				}
-
-				echo themeblvd_slogan( $element['options'] );
-
-				break;
-
-			/*------------------------------------------------------*/
-			/* Tabs
-			/*------------------------------------------------------*/
-
-			case 'tabs' :
-
-				if ( ! function_exists( 'themeblvd_tabs' ) ) {
-					_e('Tabs element not supported.', 'themeblvd_builder');
-					break;
-				}
-
-				echo themeblvd_tabs( $id, $element['options'] );
-
-				break;
-
-		} // End switch
-
-		// Allow to add on custom element that's
-		// not in the framework
-		do_action( 'themeblvd_'.$element['type'], $id, $element['options'], $location );
-
-		// End output
-		echo '<div class="clear"></div>';
-		echo '</div><!-- .grid-protection (end) -->';
-		do_action( 'themeblvd_element_'.$element['type'].'_bottom', $id, $element['options'], $location ); // Bottom of element: themeblvd_element_{type}_bottom
-		do_action( 'themeblvd_element_close', $element['type'], $location, $classes );
-		do_action( 'themeblvd_element_'.$element['type'].'_after', $id, $element['options'], $location ); // Below element: themeblvd_element_{type}_bottom
-
-	} // End foreach
-
-}
-
-/**
- * Display builder elements above the primary area.
- *
- * @since 1.0.0
- */
-
-function themeblvd_builder_content() {
-	if ( themeblvd_config( 'builder' ) ) {
-		themeblvd_builder_elements( themeblvd_config( 'builder_post_id' ), 'primary' );
 	}
-}
-/**
- * Display builder elements above the primary area.
- *
- * @since 1.0.0
- */
-function themeblvd_builder_featured() {
-	if ( themeblvd_config( 'builder' ) ) {
-		themeblvd_builder_elements( themeblvd_config( 'builder_post_id' ), 'featured' );
-	}
-}
 
-/**
- * Display builder elements below the primary area.
- *
- * @since 1.0.0
- */
-function themeblvd_builder_featured_below() {
-	if ( themeblvd_config( 'builder' ) ) {
-		themeblvd_builder_elements( themeblvd_config( 'builder_post_id' ), 'featured_below' );
+
+	// Print after style.css
+	if ( $print ) {
+		wp_add_inline_style( 'themeblvd-theme', trim($print) );
 	}
+
 }

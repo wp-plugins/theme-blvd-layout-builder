@@ -2,12 +2,12 @@
 /*
 Plugin Name: Theme Blvd Layout Builder
 Description: This plugins gives you a slick interface that ties int the Theme Blvd framework to create custom layouts for your WordPress pages.
-Version: 1.2.3
+Version: 2.0.0
 Author: Theme Blvd
 Author URI: http://themeblvd.com
 License: GPL2
 
-    Copyright 2013  Theme Blvd
+    Copyright 2014  Theme Blvd
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License version 2,
@@ -25,7 +25,7 @@ License: GPL2
 
 */
 
-define( 'TB_BUILDER_PLUGIN_VERSION', '1.2.3' );
+define( 'TB_BUILDER_PLUGIN_VERSION', '2.0.0' );
 define( 'TB_BUILDER_PLUGIN_DIR', dirname( __FILE__ ) );
 define( 'TB_BUILDER_PLUGIN_URI', plugins_url( '' , __FILE__ ) );
 
@@ -36,94 +36,129 @@ define( 'TB_BUILDER_PLUGIN_URI', plugins_url( '' , __FILE__ ) );
  */
 function themeblvd_builder_init() {
 
+	global $_themeblvd_export_layouts;
 	global $_themeblvd_layout_builder;
 
-	// Include general functions
+	// Include general items
+	include_once( TB_BUILDER_PLUGIN_DIR . '/includes/class-tb-layout-builder-data.php' );
+	include_once( TB_BUILDER_PLUGIN_DIR . '/includes/class-tb-layout-builder-notices.php' );
 	include_once( TB_BUILDER_PLUGIN_DIR . '/includes/general.php' );
 
-	// Check to make sure Theme Blvd Framework 2.2+ is running
-	if ( ! defined( 'TB_FRAMEWORK_VERSION' ) || version_compare( TB_FRAMEWORK_VERSION, '2.2.0', '<' ) ) {
-		add_action( 'admin_notices', 'themeblvd_builder_warning' );
-		add_action( 'admin_init', 'themeblvd_builder_disable_nag' );
+	if ( version_compare( TB_FRAMEWORK_VERSION, '2.5.0', '<' ) ) {
+		include_once( TB_BUILDER_PLUGIN_DIR . '/includes/legacy.php' ); // @deprecated functions used by older themes
+	}
+
+	// DEBUG/DEV Mode
+	if ( ! defined( 'TB_BUILDER_DEBUG' ) ) {
+		define( 'TB_BUILDER_DEBUG', false );
+	}
+
+	// Error handling
+	$notices = Theme_Blvd_Layout_Builder_Notices::get_instance();
+
+	if ( $notices->do_stop() ) {
+		// Stop plugin from running
 		return;
 	}
-
-	// If using framework v2.2.0, tell them they should now update to 2.2.1
-	if ( version_compare( TB_FRAMEWORK_VERSION, '2.2.0', '=' ) ) {
-		add_action( 'admin_notices', 'themeblvd_builder_warning_2' );
-	}
-
-	// If using framework version prior to v2.3, tell them API functions won't work.
-	if ( version_compare( TB_FRAMEWORK_VERSION, '2.3.0', '<' ) ) {
-		add_action( 'admin_notices', 'themeblvd_builder_warning_3' );
-	}
-
-	// Hook in check for nag to dismiss.
-	add_action( 'admin_init', 'themeblvd_builder_disable_nag' );
 
 	// Register custom layout hidden post type
 	add_action( 'init', 'themeblvd_builder_register_post_type' );
 
-	// Frontend actions -- These work in conjuction with framework theme files,
-	// header.php, template_builder.php, and footer.php
-	add_action( 'themeblvd_builder_content', 'themeblvd_builder_content' );
-	add_action( 'themeblvd_featured', 'themeblvd_builder_featured' );
-	add_action( 'themeblvd_featured_below', 'themeblvd_builder_featured_below' );
+	// Verify custom layout's data
+	add_action( 'template_redirect', 'themeblvd_builder_verify_data' );
 
-	// Get custom layouts
-	$custom_layouts = array();
-	if ( is_admin() ) {
-		$custom_layout_posts = get_posts('post_type=tb_layout&orderby=title&order=ASC&numberposts=-1');
-		if ( ! empty( $custom_layout_posts ) ) {
-			foreach( $custom_layout_posts as $layout ) {
-				$custom_layouts[$layout->post_name] = $layout->post_title;
-			}
-		} else {
-			$custom_layouts['null'] = __( 'You haven\'t created any custom layouts yet.', 'themeblvd' );
-		}
+	// Frontend actions
+	if ( version_compare( TB_FRAMEWORK_VERSION, '2.5.0', '>=' ) ) {
+
+		/**
+		 * Prints out any specific CSS in the <head> that the user
+		 * has configured from the Builder. Note in this funciton
+		 * we're using wp_add_inline_style() for the theme's style.css.
+		 * Since the theme's style.css is hooked at priorty 20, we're
+		 * using 25 here.
+		 */
+		add_action( 'wp_enqueue_scripts', 'themeblvd_builder_styles', 25 );
+
+		/**
+		 * Hooks to action in the theme's template_builder.php page
+		 * template and footer.php template in order to display the
+		 * custom layout. Requires that the theme has the function
+		 * themeblvd_elements(), Theme Blvd Framework 2.5+.
+		 */
+		add_action( 'themeblvd_builder_content', 'themeblvd_builder_layout', 10, 1 );
+
+	} else {
+		// @deprecated
+		add_action( 'themeblvd_builder_content', 'themeblvd_builder_content' );
+		add_action( 'themeblvd_featured', 'themeblvd_builder_featured' );
+		add_action( 'themeblvd_featured_below', 'themeblvd_builder_featured_below' );
+		add_filter( 'themeblvd_frontend_config', 'themeblvd_builder_legacy_config' );
 	}
 
-	// Add option to theme options page allowing user to
-	// select custom layout for their homepage.
-	$options = array(
-		'homepage_content' => array(
-			'name' 		=> __( 'Homepage Content', 'themeblvd_builder' ),
-			'desc' 		=> __( 'Select the content you\'d like to show on your homepage. Note that for this setting to take effect, you must go to Settings > Reading > Frontpage displays, and select "your latest posts."', 'themeblvd_builder' ),
-			'id' 		=> 'homepage_content',
-			'std' 		=> 'posts',
-			'type' 		=> 'radio',
-			'options' 	=> array(
-				'posts'			=> __( 'Posts', 'themeblvd_builder' ),
-				'custom_layout' => __( 'Custom Layout', 'themeblvd_builder' )
-			)
-		),
-		'homepage_custom_layout' => array(
-			'name' 		=> __( 'Select Custom Layout', 'themeblvd_builder' ),
-			'desc' 		=> __( 'Select from the custom layouts you\'ve built under the <a href="admin.php?page=themeblvd_builder">Builder</a> section.', 'themeblvd_builder' ),
-			'id' 		=> 'homepage_custom_layout',
+	// Homepage layout (@deprecated -- With current themes, user must set a static frontpage with the template applied)
+	if ( function_exists('themeblvd_builder_legacy_homepage') ) {
+		themeblvd_builder_legacy_homepage();
+	}
+
+	// Legacy sample layouts (@deprecated)
+	if ( function_exists('themeblvd_builder_legacy_samples') ) {
+		add_filter( 'themeblvd_sample_layouts', 'themeblvd_builder_legacy_samples' );
+	}
+
+	// Template Footer Sync
+	if ( themeblvd_supports( 'display', 'footer_sync' ) ) {
+
+		$link = sprintf('<a href="%s">%s</a>', admin_url('admin.php?page=themeblvd_builder'), __('Templates', 'theme-blvd-layout-builder'));
+
+		$option = array( // This option won't actually get displayed, but registered for sanitization process
+			'name' 		=> null,
+			'desc' 		=> null,
+			'id' 		=> 'footer_sync',
+			'std' 		=> '0',
+			'type' 		=> 'checkbox'
+		);
+		themeblvd_add_option( 'layout', 'footer', 'footer_sync', $option );
+
+		$option = array(
+			'name' 		=> __( 'Custom Template', 'theme-blvd-layout-builder' ),
+			'desc' 		=> sprintf(__( 'Select from the custom templates you\'ve built at the %s area. This template will be used to populate the bottom of your site.', 'theme-blvd-layout-builder' ), $link),
+			'id' 		=> 'footer_template',
 			'std' 		=> '',
 			'type' 		=> 'select',
-			'options' 	=> $custom_layouts
-		)
-	);
-	themeblvd_add_option_section( 'content', 'homepage', __( 'Homepage', 'themeblvd_builder' ), null, $options, true );
+			'select' 	=> 'templates',
+			'class'		=> 'hide footer-template-setup'
+		);
+		themeblvd_add_option( 'layout', 'footer', 'footer_template', $option );
 
-	// Filter homepage content according to options section
-	// we added above.
-	add_filter( 'template_include', 'themeblvd_builder_homepage' );
-
-	// Trigger customizer support for custom homepage options.
-	add_filter( 'themeblvd_customizer_modify_sections', 'themeblvd_modify_customizer_homepage' );
+	}
 
 	// Admin Layout Builder
 	if ( is_admin() ){
+
 		// Check to make sure admin interface isn't set to be
 		// hidden and for the appropriate user capability
 		if ( themeblvd_supports( 'admin', 'builder' ) && current_user_can( themeblvd_admin_module_cap( 'builder' ) ) ) {
+
+			// Setup exporting capabilities
+			if ( class_exists( 'Theme_Blvd_Export' ) ) { // Theme Blvd framework 2.5+
+
+				include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/class-tb-export-layout.php' );
+
+				$args = array(
+					'filename'	=> 'template-{name}.xml', // string {name} will be dynamically replaced with each export
+					'base_url'	=> admin_url('admin.php?page=themeblvd_builder')
+				);
+				$_themeblvd_export_layout = new Theme_Blvd_Export_Layout( 'layout', $args ); // Extends class Theme_Blvd_Export
+			}
+
 			include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/builder-samples.php' );
+			include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/class-tb-import-layout.php' );
 			include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/class-tb-layout-builder-ajax.php' );
 			include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/class-tb-layout-builder.php' );
+
+			// Setup Builder interface
 			$_themeblvd_layout_builder = new Theme_Blvd_Layout_Builder();
+
 		}
 	}
 
@@ -137,8 +172,12 @@ add_action( 'after_setup_theme', 'themeblvd_builder_init' );
  */
 function themeblvd_builder_api_init() {
 
-	// Include screen options class (used in API)
-	include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/class-tb-layout-builder-screen.php' );
+	// Include screen options class (not currently
+	// used in API, but could potentially be later on)
+	// include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/class-tb-layout-builder-screen.php' );
+
+	// Instantiate single object for Builder "Screen Options" tab.
+	// Theme_Blvd_Layout_Builder_Screen::get_instance();
 
 	// Include Theme_Blvd_Builder_API class.
 	include_once( TB_BUILDER_PLUGIN_DIR . '/includes/api/class-tb-builder-api.php' );
@@ -157,6 +196,6 @@ add_action( 'themeblvd_api', 'themeblvd_builder_api_init' );
  * @since 1.0.0
  */
 function themeblvd_builder_textdomain() {
-	load_plugin_textdomain( 'themeblvd_builder', false, TB_BUILDER_PLUGIN_DIR . '/lang' );
+	load_plugin_textdomain('theme-blvd-layout-builder');
 }
-add_action( 'plugins_loaded', 'themeblvd_builder_textdomain' );
+add_action( 'init', 'themeblvd_builder_textdomain' );
