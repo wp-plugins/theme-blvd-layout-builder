@@ -5358,8 +5358,91 @@ class Theme_Blvd_Builder_API {
 		);
 
 		if ( version_compare( TB_FRAMEWORK_VERSION, '2.5.0', '<' ) ) {
-			unset( $this->core_elements['slogan']['options']['button_icon_before'] );
-			unset( $this->core_elements['slogan']['options']['button_icon_after'] );
+			$this->core_elements['slogan']['options'] = array(
+				'slogan' => array(
+					'id' 		=> 'slogan',
+					'name' 		=> __( 'Setup Slogan', 'themeblvd_builder'),
+					'desc'		=> __( 'Enter the text you\'d like to show.', 'themeblvd_builder'),
+					'type'		=> 'textarea'
+			    ),
+			    'text_size' => array(
+					'id' 		=> 'text_size',
+					'name' 		=> __( 'Slogan Text Size', 'themeblvd_builder'),
+					'desc'		=> __( 'Select how large you\'d like the text in the slogan to be.', 'themeblvd_builder'),
+					'std'		=> 'large',
+					'type'		=> 'select',
+					'options'	=> array(
+						'small' 	=> __( 'Small', 'themeblvd_builder' ),
+						'default' 	=> __( 'Normal', 'themeblvd_builder' ),
+						'medium' 	=> __( 'Medium', 'themeblvd_builder' ),
+						'large' 	=> __( 'Large', 'themeblvd_builder' )
+					)
+			    ),
+			    'subgroup_start' => array(
+			    	'type'		=> 'subgroup_start',
+			    	'class'		=> 'show-hide'
+			    ),
+				'button' => array(
+			    	'id' 		=> 'button',
+					'name'		=> __( 'Button', 'themeblvd_builder' ),
+					'desc'		=> __( 'Show call-to-action button next to slogan?', 'themeblvd_builder' ),
+					'type'		=> 'checkbox',
+					'class'		=> 'trigger'
+				),
+				'button_text' => array(
+					'id' 		=> 'button_text',
+					'name'		=> __( 'Button Text', 'themeblvd_builder' ),
+					'desc'		=> __( 'Enter the text for the button.', 'themeblvd_builder' ),
+					'std'		=> 'Get Started Today!',
+					'type'		=> 'text',
+					'class'		=> 'hide receiver'
+				),
+				'button_color' => array(
+					'id' 		=> 'button_color',
+					'name'		=> __( 'Button Color', 'themeblvd_builder' ),
+					'desc'		=> __( 'Select what color you\'d like to use for this button.', 'themeblvd_builder' ),
+					'type'		=> 'select',
+					'class'		=> 'hide receiver',
+					'options'	=> themeblvd_colors()
+				),
+				'button_size' => array(
+					'id' 		=> 'button_size',
+					'name'		=> __( 'Button Size', 'themeblvd_builder' ),
+					'desc'		=> __( 'Select the size you\'d like used for this button.', 'themeblvd_builder' ),
+					'type'		=> 'select',
+					'std'		=> 'large',
+					'class'		=> 'hide receiver',
+					'options'	=> array(
+						'mini' 		=> __( 'Mini', 'themeblvd_builder' ),
+						'small' 	=> __( 'Small', 'themeblvd_builder' ),
+						'default' 	=> __( 'Normal', 'themeblvd_builder' ),
+						'large' 	=> __( 'Large', 'themeblvd_builder' )
+					)
+				),
+				'button_url' => array(
+					'id' 		=> 'button_url',
+					'name'		=> __( 'Link URL', 'themeblvd_builder' ),
+					'desc'		=> __( 'Enter the full URL where you want the button\'s link to go.', 'themeblvd_builder' ),
+					'std'		=> 'http://www.your-site.com/your-landing-page',
+					'type'		=> 'text',
+					'class'		=> 'hide receiver'
+				),
+				'button_target' => array(
+					'id' 		=> 'button_target',
+					'name'		=> __( 'Link Target', 'themeblvd_builder' ),
+					'desc'		=> __( 'Select how you want the button to open the webpage.', 'themeblvd_builder' ),
+					'type'		=> 'select',
+					'class'		=> 'hide receiver',
+					'options'	=> array(
+				        '_self' 	=> __( 'Same Window', 'themeblvd_builder' ),
+				        '_blank' 	=> __( 'New Window', 'themeblvd_builder' ),
+				        'lightbox' 	=> __( 'Lightbox Popup', 'themeblvd_builder' )
+					)
+				),
+				'subgroup_end' => array(
+			    	'type'		=> 'subgroup_end'
+			    )
+			);
 		}
 
 		/*--------------------------------------------*/
@@ -6613,9 +6696,23 @@ class Theme_Blvd_Builder_API {
 	 *
 	 * @since 1.1.1
 	 *
-	 * @param string All arguments to create element
+	 * @param array $args All arguments to create element or @deprecated string ID of new element
+	 * @param @deprecated string $element_name Element name
+	 * @param @deprecated string $uery_type Type of query
+	 * @param @deprecated array $options Options for element
+	 * @param @deprecated string $callback Callback function for output of element
 	 */
-	public function add_element( $args ) {
+	public function add_element( $args, $element_name = '', $query_type = null, $options = array(), $callback = '' ) {
+
+		if ( is_string($args) ) { // @deprecated
+			$args = array(
+				'id'			=> $args,
+				'name'			=> $element_name,
+				'query_type'	=> $query_type,
+				'options'		=> $options,
+				'callback'		=> $callback
+			);
+		}
 
 		$defaults = array(
 			'id'		=> '',
@@ -6639,7 +6736,7 @@ class Theme_Blvd_Builder_API {
 			);
 			$args['support'] = wp_parse_args( $args['support'], $support_defaults );
 
-			$this->client_elements[$element_id] = array(
+			$this->client_elements[$args['id']] = array(
 				'info' => array(
 					'name' 		=> $args['name'],
 					'id'		=> $args['id'],
