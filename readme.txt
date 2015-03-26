@@ -2,7 +2,7 @@
 Author URI: http://www.jasonbobich.com
 Contributors: themeblvd
 Tags: layouts, custom, homepage, builder, Theme Blvd, themeblvd, Jason Bobich
-Stable Tag: 2.0.3
+Stable Tag: 2.0.4
 
 When using a Theme Blvd theme, this plugin gives you slick interface to build custom layouts.
 
@@ -30,6 +30,22 @@ When using a Theme Blvd theme, this plugin gives you slick interface to build cu
 3. Editing a template.
 
 == Changelog ==
+
+= 2.0.4 =
+
+* Added new sample layouts, and improved previous ones (for framework 2.5+ themes).
+* Added options to Icon Box element (for framework 2.5+ themes).
+* Added options to Content element (for framework 2.5+ themes).
+* Added options to Divider element (for framework 2.5+ themes).
+* Added "Custom Styling" (background color) options to Jumbotron element (for framework 2.5+ themes).
+* Added "Maximum Width" option to Promo Box element (for framework 2.5+ themes).
+* Added "Gutters" option to Post Showcase element (for framework 2.5+ themes).
+* Added video background support for sections (for framework 2.5+ themes).
+* Added responsive visibility options to columns and sections (for framework 2.5+ themes).
+* Added Revolution Slider element.
+* Modified how you can set the background image sizing with parallax backgrounds for sections (for framework 2.5+ themes).
+* Reduced plugin size, by pulling from unified assets directory for sample layouts (for framework 2.5+ themes).
+* Fixed Bug: Importing from a sample layout with a slider would import an extra, empty slide (for framework 2.5+ themes).
 
 = 2.0.3 =
 
