@@ -1,8 +1,8 @@
 === Theme Blvd Layout Builder ===
-Author URI: http://www.jasonbobich.com
+Author URI: http://www.themeblvd.com
 Contributors: themeblvd
 Tags: layouts, custom, homepage, builder, Theme Blvd, themeblvd, Jason Bobich
-Stable Tag: 2.0.5
+Stable Tag: 2.0.6
 
 When using a Theme Blvd theme, this plugin gives you slick interface to build custom layouts.
 
@@ -34,6 +34,15 @@ When using a Theme Blvd theme, this plugin gives you slick interface to build cu
 3. Editing a template.
 
 == Changelog ==
+
+= 2.0.6 - 05/29/2015 =
+
+* Renamed "Jumbotron" to "Hero Unit".
+* Improvements to Hero Unit (for framework 2.5+ themes).
+* Allow layout's first section padding to adjust automatically to height of theme header, when displaying "Transparent Header" (for framework 2.5+ themes).
+* Added more button size selections elements with buttons (for framework 2.5+ themes).
+* Added two shop homepage sample layouts for use with WooCommerce (for framework 2.5+ themes).
+* Added "Small Desktops" breakpoint for Columns element (for framework 2.5+ themes).
 
 = 2.0.5 - 04/19/2015 =
 
