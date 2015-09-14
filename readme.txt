@@ -2,7 +2,7 @@
 Author URI: http://www.themeblvd.com
 Contributors: themeblvd
 Tags: layouts, custom, homepage, builder, Theme Blvd, themeblvd, Jason Bobich
-Stable Tag: 2.0.8
+Stable Tag: 2.0.9
 
 When using a Theme Blvd theme, this plugin gives you slick interface to build custom layouts.
 
@@ -35,14 +35,23 @@ When using a Theme Blvd theme, this plugin gives you slick interface to build cu
 
 == Changelog ==
 
+= 2.0.9 - 08/24/2015 =
+
+* Added: More accuracy for opacity selections (for framework 2.5+ themes).
+* Improvement: Elements and sample layouts sorted alphabetically, after merged with client-API.
+* Improvement: Parallax background image performance (for framework 2.5+ themes).
+* Removed: Parallax intensity options; now it's based on height of image, proportional to container (for framework 2.5+ themes).
+
+** Note: If you're using a theme with framework 2.5.0, you must update it to the latest version containing framework 2.5.1.**
+
 = 2.0.8 - 07/06/2015 =
 
-* Fixed fatal error in previous version (for framework 2.2-2.4 themes).
+* Fixed: Fatal error in previous version (for framework 2.2-2.4 themes).
 
 = 2.0.7 - 07/04/2015 =
 
-* Added extended custom background support to Hero Unit element (for framework 2.5+ themes).
-* Added hero unit slider element (for framework 2.5+ themes).
+* Added: Extended custom background support for Hero Unit element (for framework 2.5+ themes).
+* Added: Hero unit slider element (for framework 2.5+ themes).
 
 = 2.0.6 - 05/29/2015 =
 
