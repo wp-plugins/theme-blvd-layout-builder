@@ -2,7 +2,7 @@
 /*
 Plugin Name: Theme Blvd Layout Builder
 Description: When using a Theme Blvd theme, this plugin gives you slick interface to build custom layouts.
-Version: 2.0.9.1
+Version: 2.0.9.2
 Author: Theme Blvd
 Author URI: http://themeblvd.com
 License: GPL2
@@ -25,7 +25,7 @@ License: GPL2
 
 */
 
-define( 'TB_BUILDER_PLUGIN_VERSION', '2.0.9.1' );
+define( 'TB_BUILDER_PLUGIN_VERSION', '2.0.9.2' );
 define( 'TB_BUILDER_PLUGIN_DIR', dirname( __FILE__ ) );
 define( 'TB_BUILDER_PLUGIN_URI', plugins_url( '' , __FILE__ ) );
 
@@ -108,7 +108,7 @@ function themeblvd_builder_init() {
 	// Template Footer Sync
 	if ( themeblvd_supports( 'display', 'footer_sync' ) ) {
 
-		$link = sprintf('<a href="%s">%s</a>', admin_url('admin.php?page=themeblvd_builder'), __('Templates', 'theme-blvd-layout-builder'));
+		$link = sprintf('<a href="%s">%s</a>', esc_url( add_query_arg( array('page' => 'themeblvd_builder'), admin_url('admin.php') ) ), __('Templates', 'theme-blvd-layout-builder'));
 
 		$option = array( // This option won't actually get displayed, but registered for sanitization process
 			'name' 		=> null,
@@ -140,19 +140,20 @@ function themeblvd_builder_init() {
 		if ( themeblvd_supports( 'admin', 'builder' ) && current_user_can( themeblvd_admin_module_cap( 'builder' ) ) ) {
 
 			// Setup exporting capabilities
-			if ( class_exists( 'Theme_Blvd_Export' ) ) { // Theme Blvd framework 2.5+
+			if ( class_exists('Theme_Blvd_Export') ) { // Theme Blvd framework 2.5+ and Theme Blvd Import plugin
 
 				include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/class-tb-export-layout.php' );
+				include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/class-tb-import-layout.php' );
 
 				$args = array(
 					'filename'	=> 'template-{name}.xml', // string {name} will be dynamically replaced with each export
 					'base_url'	=> admin_url('admin.php?page=themeblvd_builder')
 				);
+
 				$_themeblvd_export_layout = new Theme_Blvd_Export_Layout( 'layout', $args ); // Extends class Theme_Blvd_Export
 			}
 
 			include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/builder-samples.php' );
-			include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/class-tb-import-layout.php' );
 			include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/class-tb-layout-builder-ajax.php' );
 			include_once( TB_BUILDER_PLUGIN_DIR . '/includes/admin/class-tb-layout-builder.php' );
 
